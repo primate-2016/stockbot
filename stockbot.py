@@ -1,61 +1,30 @@
-import datetime as dt
-import matplotlib.pyplot as plt
-from matplotlib import style
+import os
 import pandas as pd
+import datetime
 import pandas_datareader.data as web
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from pandas import Series, DataFrame
+from matplotlib import style
 
-import bs4 as bs
-# import pickle
-import requests
+start = datetime.datetime(2010, 1, 1)
+end = datetime.datetime(2017, 1, 11)
+av_api_key = os.getenv('ALPHAVANTAGE_API_KEY')
 
-def get_tickers(webpage, ticker_position):
-    resp = requests.get(webpage)
-    soup = bs.BeautifulSoup(resp.text, 'lxml')
-    table = soup.find('table', {'class': 'wikitable sortable'})
-    tickers = []
-    # ignore first row in table and take second (ticker_position) column
-    # rsrtip() tickers as some have trailing /n
-    for row in table.findAll('tr')[1:]:
-        ticker = row.findAll('td')[ticker_position].text
-        tickers.append(ticker.rstrip())
-        
-    #with open("sp500tickers.pickle","wb") as f:
-    #    pickle.dump(tickers,f)
+df = web.DataReader("LON:BARC", 'av-daily', start=start, end=end, api_key=av_api_key)
+print(df)
+close_px = df['close']
+hundred_day_moving_avg = close_px.rolling(window=100).mean()
+ten_day_moving_avg = close_px.rolling(window=10).mean()
 
-    return tickers
+# Adjusting the size of matplotlib
+mpl.rc('figure', figsize=(8, 7))
+mpl.__version__
 
-stock_indices = [
-    'https://en.wikipedia.org/wiki/FTSE_100_Index',
-    'https://en.wikipedia.org/wiki/FTSE_250_Index'
+# Adjusting the style of matplotlib
+style.use('ggplot')
 
-]
-
-tickers = []
-for stock_index in stock_indices:
-    tickers.extend(get_tickers(stock_index, 1))
-
-print(tickers)
-
-# style.use('ggplot')
-
-# start = dt.datetime(2000,1,1)
-# end = dt.datetime(2016,12,31)
-
-# df = web.DataReader('TSLA', 'yahoo', start, end)
-# print(df.tail(6))
-
-# # dump to csv
-# df.to_csv('tsla.csv')
-
-# read from csv
-# df = pd.read_csv('tsla.csv', parse_dates=True, index_col=0)
-# print(df[['Open', 'High']].head())
-
-# # create a graph based on the Adj Close column in the csv
-# df['Adj Close'].plot()
-# plt.show()
-
-
-# get ftse 100 and ftse 250 list from wikipedia (ftse 250 is companies 101 to 250) 
-
-
+close_px.plot(label='BARC')
+hundred_day_moving_avg.plot(label='100d_moving_avg')
+ten_day_moving_avg.plot(label='10d_moving_avg')
+plt.show()
