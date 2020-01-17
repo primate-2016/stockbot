@@ -3,31 +3,34 @@ import bs4 as bs
 import requests
 
 
-def get_tickers(webpage, ticker_position):
+def get_tickers(webpage, ticker_position, sector_position):
     resp = requests.get(webpage)
     soup = bs.BeautifulSoup(resp.text, 'lxml')
     table = soup.find('table', {'class': 'wikitable sortable'})
-    tickers = []
-    # ignore first row in table and take second (ticker_position) column
-    # rstrip() tickers as some have trailing /n
+
+    tickers = {}
     for row in table.findAll('tr')[1:]:
-        ticker = row.findAll('td')[ticker_position].text
-        tickers.append(ticker.rstrip())
+        symbol = row.findAll('td')[ticker_position].text.rstrip()
+        sector = row.findAll('td')[sector_position].text.rstrip()
+
+        tickers[symbol] = sector
+        print(tickers)
         
-    # with open("sp500tickers.pickle","wb") as f:
-    #    pickle.dump(tickers,f)
+#     # with open("sp500tickers.pickle","wb") as f:
+#     #    pickle.dump(tickers,f)
 
     return tickers
 
 
 stock_indices = [
     'https://en.wikipedia.org/wiki/FTSE_100_Index',
-    'https://en.wikipedia.org/wiki/FTSE_250_Index'
-
+    # 'https://en.wikipedia.org/wiki/FTSE_250_Index' doesn't have sectors
 ]
 
-tickers = []
-for stock_index in stock_indices:
-    tickers.extend(get_tickers(stock_index, 1))
+if __name__ == "__main__":
 
-print(tickers)
+    tickers = {}
+    for stock_index in stock_indices:
+        tickers.update(get_tickers(stock_index, 1, 2))
+
+    print(tickers)
