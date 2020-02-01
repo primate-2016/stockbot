@@ -3,3 +3,5 @@ pandas-datareader
 matplotlib
 beautifulsoup4
 sklearn
+statsmodels
+pmdarima
